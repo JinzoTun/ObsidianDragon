@@ -1,0 +1,21 @@
+name: ODragon
+version: '0.1.0-SNAPSHOT'
+main: com.obsidian.dragon.ObsidianDragon
+description: A simple plugin to manage the Ender Dragon.
+api-version: '1.21'
+authors: [ JinzoTun ]
+commands:
+  obsidiandragon:
+    description: Manage the Ender Dragon.
+    aliases: [odragon, dragon]
+    usage: |
+      /<command> spawn - Spawn the Ender Dragon
+      /<command> reload - Reload loot configuration
+    permission: obsidiandragon.spawn
+permissions:
+  obsidiandragon.spawn:
+    description: Allows a player to spawn the Ender Dragon
+    default: op
+  obsidiandragon.admin.loot:
+    description: Allows a player to reload loot configuration
+    default: op
