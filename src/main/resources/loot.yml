@@ -1,0 +1,123 @@
+# ObsidianDragon Custom Loot Configuration
+# Configure custom loot drops for the Ender Dragon
+#
+# Structure:
+#   material: The Minecraft material name (e.g., DIAMOND, ELYTRA)
+#   amount: Can be a single number (e.g., 5) or a range (e.g., 5-10)
+#   chance: Drop chance percentage (0-100, where 100 = always drops)
+#   name: Custom display name with color codes (& for colors)
+#   lore: List of lore lines with color codes
+#   enchantments: List of enchantments in format "ENCHANTMENT_NAME:LEVEL"
+#
+# Color Codes:
+#   &0 = Black, &1 = Dark Blue, &2 = Dark Green, &3 = Dark Aqua
+#   &4 = Dark Red, &5 = Dark Purple, &6 = Gold, &7 = Gray
+#   &8 = Dark Gray, &9 = Blue, &a = Green, &b = Aqua
+#   &c = Red, &d = Light Purple, &e = Yellow, &f = White
+#   &l = Bold, &m = Strikethrough, &n = Underline, &o = Italic
+
+loot:
+  # Dragon Diamond - Always drops 5-10 diamonds
+  - material: DIAMOND
+    amount: 5-10
+    chance: 100.0
+    name: "&6&lDragon Diamond"
+    lore:
+      - "&7Dropped by the Ender Dragon"
+      - "&7A precious gem from the End"
+      - ""
+      - "&d&oLegendary Item"
+
+  # Dragon's Elytra - 50% chance
+  - material: ELYTRA
+    amount: 1
+    chance: 50.0
+    name: "&5Dragon's Wings"
+    lore:
+      - "&7Ancient wings of the dragon"
+      - "&7Grants the power of flight"
+    enchantments:
+      - "MENDING:1"
+      - "UNBREAKING:3"
+
+  # Dragon Egg - 25% chance (rare!)
+  - material: DRAGON_EGG
+    amount: 1
+    chance: 25.0
+    name: "&d&lMystic Dragon Egg"
+    lore:
+      - "&5A rare egg from the Ender Dragon"
+      - "&5Handle with care..."
+      - ""
+      - "&6&oVery Rare"
+
+  # Enchanted Diamond Sword - 75% chance
+  - material: DIAMOND_SWORD
+    amount: 1
+    chance: 75.0
+    name: "&c&lDragon Slayer"
+    lore:
+      - "&7Forged from dragon scales"
+      - "&7Deals massive damage"
+      - ""
+      - "&6Special: +10 Attack Damage"
+    enchantments:
+      - "SHARPNESS:5"
+      - "FIRE_ASPECT:2"
+      - "LOOTING:3"
+      - "UNBREAKING:3"
+      - "MENDING:1"
+
+  # Experience Bottles - Always drops 20-30
+  - material: EXPERIENCE_BOTTLE
+    amount: 20-30
+    chance: 100.0
+    name: "&a&lDragon's Essence"
+    lore:
+      - "&7Concentrated dragon experience"
+
+  # Ender Pearls - Always drops 10-16
+  - material: ENDER_PEARL
+    amount: 10-16
+    chance: 100.0
+    name: "&9Ender Pearl"
+
+  # Dragon Head - 30% chance
+  - material: DRAGON_HEAD
+    amount: 1
+    chance: 30.0
+    name: "&5&lDragon Trophy"
+    lore:
+      - "&7The head of the fearsome dragon"
+      - "&7A trophy of your victory"
+      - ""
+      - "&d&oRare Trophy"
+
+  # Enchanted Book with Protection - 40% chance
+  - material: ENCHANTED_BOOK
+    amount: 1
+    chance: 40.0
+    name: "&b&lTome of Dragon Protection"
+    lore:
+      - "&7An ancient book of protection"
+      - "&7Found in the dragon's hoard"
+    enchantments:
+      - "PROTECTION:4"
+
+  # Golden Apples - 80% chance to drop 3-5
+  - material: GOLDEN_APPLE
+    amount: 3-5
+    chance: 80.0
+    name: "&6Dragon's Golden Apple"
+    lore:
+      - "&7Blessed by dragon magic"
+
+  # Netherite Ingot - 35% chance for 1-3
+  - material: NETHERITE_INGOT
+    amount: 1-3
+    chance: 35.0
+    name: "&4&lDragon Netherite"
+    lore:
+      - "&7Infused with dragon energy"
+      - "&7Stronger than regular netherite"
+
