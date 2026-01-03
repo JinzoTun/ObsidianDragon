@@ -4,18 +4,29 @@ main: com.obsidian.dragon.ObsidianDragon
 description: A simple plugin to manage the Ender Dragon.
 api-version: '1.21'
 authors: [ JinzoTun ]
+softdepend: [ Vault, CoinsEngine ]
 commands:
   obsidiandragon:
     description: Manage the Ender Dragon.
     aliases: [odragon, dragon]
     usage: |
+      /<command> menu - Open the dragon menu GUI
       /<command> spawn - Spawn the Ender Dragon
       /<command> kill - Instantly kill the Ender Dragon
       /<command> reload - Reload plugin configuration
-    permission: obsidiandragon.spawn
+    permission: obsidiandragon.menu.use
 permissions:
+  obsidiandragon.menu.use:
+    description: Allows a player to use the dragon menu GUI
+    default: true
+  obsidiandragon.admin.menu:
+    description: Allows full access to all dragon menu features (admin)
+    default: op
   obsidiandragon.spawn:
     description: Allows a player to spawn the Ender Dragon
+    default: true
+  obsidiandragon.spawn.free:
+    description: Allows a player to spawn the dragon without paying (bypass economy cost)
     default: op
   obsidiandragon.admin.kill:
     description: Allows a player to instantly kill the Ender Dragon

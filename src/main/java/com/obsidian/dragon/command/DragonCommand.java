@@ -1,7 +1,6 @@
 package com.obsidian.dragon.command;
 
 import com.obsidian.dragon.ObsidianDragon;
-import com.obsidian.dragon.logic.DragonRespawnManager;
 import com.obsidian.dragon.util.MessageUtil;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -9,9 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 
-
 import java.util.ArrayList;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -30,6 +27,7 @@ public class DragonCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 0) {
             msg.send(sender, "&e&lObsidianDragon Commands:");
+            msg.send(sender, "&7/dragon menu &f- Open the dragon menu GUI");
             msg.send(sender, "&7/dragon spawn &f- Spawn the Ender Dragon");
             msg.send(sender, "&7/dragon kill &f- Instantly kill the Ender Dragon");
             msg.send(sender, "&7/dragon reload &f- Reload plugin configuration");
@@ -39,6 +37,7 @@ public class DragonCommand implements CommandExecutor, TabCompleter {
         String subCommand = args[0].toLowerCase();
 
         switch (subCommand) {
+            case "menu" -> handleMenu(sender);
             case "spawn" -> handleSpawn(sender);
             case "kill" -> handleKill(sender);
             case "reload" -> handleReload(sender);
@@ -48,30 +47,28 @@ public class DragonCommand implements CommandExecutor, TabCompleter {
     }
 
     /**
-     * Handles the spawn subcommand.
+     * Handles the menu subcommand.
      */
-    private void handleSpawn(CommandSender sender) {
-        if (!sender.hasPermission("obsidiandragon.spawn")) {
+    private void handleMenu(CommandSender sender) {
+        if (!(sender instanceof org.bukkit.entity.Player player)) {
+            msg.send(sender, "&cOnly players can use this command!");
+            return;
+        }
+
+        if (!player.hasPermission("obsidiandragon.menu.use") && !player.hasPermission("obsidiandragon.admin.menu")) {
             msg.sendConfig(sender, "messages.no-permission",
                     "&cYou don't have permission to use this command.");
             return;
         }
 
-        try {
-            DragonRespawnManager manager = new DragonRespawnManager("world_the_end");
-            boolean success = manager.spawnDragon();
-            if (success) {
-                msg.sendConfig(sender, "messages.spawn-success",
-                        "&aEnder Dragon respawn sequence started!");
-            } else {
-                msg.sendConfig(sender, "messages.spawn-failed",
-                        "&cFailed to start dragon respawn. Is the dragon already alive or is the portal missing?");
-            }
-        } catch (Exception e) {
-            msg.sendConfig(sender, "messages.spawn-error",
-                    "&cError: %error%", "%error%", e.getMessage());
-            plugin.getLogger().warning("Failed to spawn dragon: " + e.getMessage());
-        }
+        plugin.getGUIManager().openMainMenu(player);
+    }
+
+    /**
+     * Handles the spawn subcommand.
+     */
+    private void handleSpawn(CommandSender sender) {
+        plugin.spawnDragon(sender);
     }
 
     /**
@@ -115,6 +112,12 @@ public class DragonCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             List<String> completions = new ArrayList<>();
             String partial = args[0].toLowerCase();
+
+            // Add "menu" if player has permission
+            if ((sender.hasPermission("obsidiandragon.menu.use") || sender.hasPermission("obsidiandragon.admin.menu"))
+                    && "menu".startsWith(partial)) {
+                completions.add("menu");
+            }
 
             // Add "spawn" if player has permission
             if (sender.hasPermission("obsidiandragon.spawn") && "spawn".startsWith(partial)) {

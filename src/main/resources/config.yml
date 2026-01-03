@@ -1,6 +1,25 @@
 # ObsidianDragon Configuration File
 # Note: All messages automatically include the prefix: &e&l[ObsidianDragon]
 
+# Economy integration settings
+economy:
+  # Enable economy integration (requires Vault or CoinsEngine)
+  enabled: true
+
+  # Economy provider: "vault", "coinsengine", or "auto" (auto-detect)
+  provider: "auto"
+
+  # Cost to spawn the Ender Dragon (set to 0 for free)
+  spawn-cost: 1000.0
+
+  # Economy messages
+  messages:
+    payment-success: "&aYou paid %cost% to spawn the Ender Dragon!"
+    insufficient-funds: "&cInsufficient funds! You need %cost% but only have %balance%."
+    transaction-failed: "&cTransaction failed! Please try again or contact an administrator."
+    refund-success: "&aYou have been refunded %amount% (spawn failed)."
+    spawn-free: "&7Dragon spawn is free for you!"
+
 # Dragon kill command settings
 dragon-kill:
   # Cooldown in seconds before the /dragon kill command can be used again
@@ -24,4 +43,3 @@ messages:
   spawn-failed: "&cFailed to start dragon respawn. Is the dragon already alive or is the portal missing?"
   spawn-error: "&cError: %error%"
   no-permission: "&cYou don't have permission to use this command."
-

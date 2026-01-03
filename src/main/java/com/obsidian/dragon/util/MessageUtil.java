@@ -11,7 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class MessageUtil {
 
-    private static final String PREFIX = "&e&l[ObsidianDragon] &r";
+    private static final String PREFIX = "&e&lObsidianDragon &8» &r";
     private final JavaPlugin plugin;
 
     public MessageUtil(JavaPlugin plugin) {
