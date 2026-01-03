@@ -2,6 +2,7 @@ package com.obsidian.dragon.command;
 
 import com.obsidian.dragon.ObsidianDragon;
 import com.obsidian.dragon.logic.DragonRespawnManager;
+import com.obsidian.dragon.util.MessageUtil;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -17,18 +18,21 @@ import java.util.List;
 public class DragonCommand implements CommandExecutor, TabCompleter {
 
     private final ObsidianDragon plugin;
+    private final MessageUtil msg;
 
     public DragonCommand(ObsidianDragon plugin) {
         this.plugin = plugin;
+        this.msg = plugin.getMessageUtil();
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 
         if (args.length == 0) {
-            sender.sendMessage("§e§lObsidianDragon Commands:");
-            sender.sendMessage("§7/dragon spawn §f- Spawn the Ender Dragon");
-            sender.sendMessage("§7/dragon reload §f- Reload loot configuration");
+            msg.send(sender, "&e&lObsidianDragon Commands:");
+            msg.send(sender, "&7/dragon spawn &f- Spawn the Ender Dragon");
+            msg.send(sender, "&7/dragon kill &f- Instantly kill the Ender Dragon");
+            msg.send(sender, "&7/dragon reload &f- Reload plugin configuration");
             return true;
         }
 
@@ -36,6 +40,7 @@ public class DragonCommand implements CommandExecutor, TabCompleter {
 
         switch (subCommand) {
             case "spawn" -> handleSpawn(sender);
+            case "kill" -> handleKill(sender);
             case "reload" -> handleReload(sender);
             default -> sender.sendMessage("§cUnknown command. Use §e/dragon §cfor help.");
         }
@@ -47,7 +52,8 @@ public class DragonCommand implements CommandExecutor, TabCompleter {
      */
     private void handleSpawn(CommandSender sender) {
         if (!sender.hasPermission("obsidiandragon.spawn")) {
-            sender.sendMessage("§cYou don't have permission to use this command.");
+            msg.sendConfig(sender, "messages.no-permission",
+                    "&cYou don't have permission to use this command.");
             return;
         }
 
@@ -55,34 +61,52 @@ public class DragonCommand implements CommandExecutor, TabCompleter {
             DragonRespawnManager manager = new DragonRespawnManager("world_the_end");
             boolean success = manager.spawnDragon();
             if (success) {
-                sender.sendMessage("§aEnder Dragon respawn sequence started!");
+                msg.sendConfig(sender, "messages.spawn-success",
+                        "&aEnder Dragon respawn sequence started!");
             } else {
-                sender.sendMessage("§cFailed to start dragon respawn. Is the dragon already alive or is the portal missing?");
+                msg.sendConfig(sender, "messages.spawn-failed",
+                        "&cFailed to start dragon respawn. Is the dragon already alive or is the portal missing?");
             }
         } catch (Exception e) {
-            sender.sendMessage("§cError: " + e.getMessage());
+            msg.sendConfig(sender, "messages.spawn-error",
+                    "&cError: %error%", "%error%", e.getMessage());
             plugin.getLogger().warning("Failed to spawn dragon: " + e.getMessage());
         }
     }
 
     /**
-     * Handles the reload subcommand for loot configuration.
+     * Handles the kill subcommand.
+     */
+    private void handleKill(CommandSender sender) {
+        plugin.getDragonKillManager().killDragon(sender);
+    }
+
+    /**
+     * Handles the reload subcommand for plugin configuration.
      */
     private void handleReload(CommandSender sender) {
         if (!sender.hasPermission("obsidiandragon.admin.loot")) {
-            sender.sendMessage("§cYou don't have permission to use this command.");
+            msg.sendConfig(sender, "messages.no-permission",
+                    "&cYou don't have permission to use this command.");
             return;
         }
 
-        sender.sendMessage("§eReloading loot configuration...");
-        boolean success = plugin.getLootManager().reload();
+        msg.send(sender, "&eReloading plugin configuration...");
+        boolean success = plugin.reloadPlugin();
 
         if (success) {
-            int count = plugin.getLootManager().getLootItemCount();
-            sender.sendMessage("§aLoot configuration reloaded successfully!");
-            sender.sendMessage("§7Loaded " + count + " loot item(s).");
+            int lootCount = plugin.getLootManager().getLootItemCount();
+            msg.sendConfig(sender, "messages.reload-success",
+                    "&aConfiguration reloaded successfully!");
+
+            // Send details with both placeholders replaced
+            String detailsMsg = plugin.getConfig().getString("messages.reload-success-details",
+                    "&7Config: %config% | Loot items: %loot%");
+            detailsMsg = detailsMsg.replace("%config%", "✓").replace("%loot%", String.valueOf(lootCount));
+            msg.send(sender, detailsMsg);
         } else {
-            sender.sendMessage("§cFailed to reload loot configuration! Check console for errors.");
+            msg.sendConfig(sender, "messages.reload-failed",
+                    "&cFailed to reload configuration! Check console for errors.");
         }
     }
 
@@ -95,6 +119,11 @@ public class DragonCommand implements CommandExecutor, TabCompleter {
             // Add "spawn" if player has permission
             if (sender.hasPermission("obsidiandragon.spawn") && "spawn".startsWith(partial)) {
                 completions.add("spawn");
+            }
+
+            // Add "kill" if player has permission
+            if (sender.hasPermission("obsidiandragon.admin.kill") && "kill".startsWith(partial)) {
+                completions.add("kill");
             }
 
             // Add "reload" if player has admin permission

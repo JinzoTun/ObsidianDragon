@@ -1,0 +1,27 @@
+# ObsidianDragon Configuration File
+# Note: All messages automatically include the prefix: &e&l[ObsidianDragon]
+
+# Dragon kill command settings
+dragon-kill:
+  # Cooldown in seconds before the /dragon kill command can be used again
+  # Set to 0 to disable cooldown
+  cooldown: 300
+
+  # Messages (prefix is added automatically)
+  messages:
+    success: "&a&lDragon killed! &7The Ender Dragon has been slain."
+    broadcast: "&7%player% has instantly killed the Ender Dragon!"
+    no-dragon: "&cNo Ender Dragon is currently alive in The End!"
+    cooldown: "&cThis command is on cooldown! Wait %time% seconds."
+    no-permission: "&cYou don't have permission to use this command."
+
+# General command messages
+messages:
+  reload-success: "&aConfiguration reloaded successfully!"
+  reload-success-details: "&7Config: %config% | Loot items: %loot%"
+  reload-failed: "&cFailed to reload configuration! Check console for errors."
+  spawn-success: "&aEnder Dragon respawn sequence started!"
+  spawn-failed: "&cFailed to start dragon respawn. Is the dragon already alive or is the portal missing?"
+  spawn-error: "&cError: %error%"
+  no-permission: "&cYou don't have permission to use this command."
+

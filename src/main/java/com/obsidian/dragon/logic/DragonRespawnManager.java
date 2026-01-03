@@ -26,6 +26,10 @@ public class DragonRespawnManager {
     }
 
     public boolean spawnDragon() {
+        // Null check for battle
+        if (battle == null) {
+            return false;
+        }
 
         // Ensure portal exists
         battle.generateEndPortal(true);
@@ -42,23 +46,39 @@ public class DragonRespawnManager {
         Location center = battle.getEndPortalLocation();
         if (center == null) return false;
 
+        // Null check for world
+        if (endWorld == null) {
+            return false;
+        }
+
         // Spawn End Crystals at N/S/E/W pillars
         double y = center.getY() + 1;
         double offset = 3;
 
         List<EnderCrystal> crystals = new ArrayList<>();
-        crystals.add(endWorld.spawn(center.clone().add(offset + 0.5, 0, 0 + 0.5), EnderCrystal.class));
-        crystals.add(endWorld.spawn(center.clone().add(-offset + 0.5, 0, 0 + 0.5), EnderCrystal.class));
-        crystals.add(endWorld.spawn(center.clone().add(0 + 0.5, 0, offset + 0.5), EnderCrystal.class));
-        crystals.add(endWorld.spawn(center.clone().add(0 + 0.5, 0, -offset + 0.5), EnderCrystal.class));
+        try {
+            crystals.add(endWorld.spawn(center.clone().add(offset + 0.5, 0, 0 + 0.5), EnderCrystal.class));
+            crystals.add(endWorld.spawn(center.clone().add(-offset + 0.5, 0, 0 + 0.5), EnderCrystal.class));
+            crystals.add(endWorld.spawn(center.clone().add(0 + 0.5, 0, offset + 0.5), EnderCrystal.class));
+            crystals.add(endWorld.spawn(center.clone().add(0 + 0.5, 0, -offset + 0.5), EnderCrystal.class));
 
-        crystals.forEach(c -> {
-            Location loc = c.getLocation().clone(); // clone original location
-            loc.setY(y);                            // set Y
-            c.teleport(loc);                        // teleport entity
-        });
+            crystals.forEach(c -> {
+                if (c != null) {
+                    Location loc = c.getLocation().clone(); // clone original location
+                    loc.setY(y);                             // set Y
+                    c.teleport(loc);                         // teleport entity
+                }
+            });
 
-
-        return battle.initiateRespawn(crystals);
+            return battle.initiateRespawn(crystals);
+        } catch (Exception e) {
+            // Clean up crystals if spawn fails
+            crystals.forEach(c -> {
+                if (c != null && !c.isDead()) {
+                    c.remove();
+                }
+            });
+            return false;
+        }
     }
 }

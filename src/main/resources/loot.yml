@@ -40,10 +40,10 @@ loot:
       - "MENDING:1"
       - "UNBREAKING:3"
 
-  # Dragon Egg - 25% chance (rare!)
+  # Dragon Egg - 5% chance (rare!)
   - material: DRAGON_EGG
     amount: 1
-    chance: 25.0
+    chance: 5.0
     name: "&d&lMystic Dragon Egg"
     lore:
       - "&5A rare egg from the Ender Dragon"
@@ -51,10 +51,10 @@ loot:
       - ""
       - "&6&oVery Rare"
 
-  # Enchanted Diamond Sword - 75% chance
+  # Enchanted Diamond Sword - 60% chance
   - material: DIAMOND_SWORD
     amount: 1
-    chance: 75.0
+    chance: 60.0
     name: "&c&lDragon Slayer"
     lore:
       - "&7Forged from dragon scales"
@@ -82,10 +82,10 @@ loot:
     chance: 100.0
     name: "&9Ender Pearl"
 
-  # Dragon Head - 30% chance
+  # Dragon Head - 10% chance
   - material: DRAGON_HEAD
     amount: 1
-    chance: 30.0
+    chance: 10.0
     name: "&5&lDragon Trophy"
     lore:
       - "&7The head of the fearsome dragon"
@@ -93,10 +93,10 @@ loot:
       - ""
       - "&d&oRare Trophy"
 
-  # Enchanted Book with Protection - 40% chance
+  # Enchanted Book with Protection - 75% chance
   - material: ENCHANTED_BOOK
     amount: 1
-    chance: 40.0
+    chance: 75.0
     name: "&b&lTome of Dragon Protection"
     lore:
       - "&7An ancient book of protection"
@@ -104,18 +104,18 @@ loot:
     enchantments:
       - "PROTECTION:4"
 
-  # Golden Apples - 80% chance to drop 3-5
+  # Golden Apples - 50% chance to drop 3-5
   - material: GOLDEN_APPLE
     amount: 3-5
-    chance: 80.0
+    chance: 50.0
     name: "&6Dragon's Golden Apple"
     lore:
       - "&7Blessed by dragon magic"
 
-  # Netherite Ingot - 35% chance for 1-3
+  # Netherite Ingot - 25% chance for 1-3
   - material: NETHERITE_INGOT
     amount: 1-3
-    chance: 35.0
+    chance: 25.0
     name: "&4&lDragon Netherite"
     lore:
       - "&7Infused with dragon energy"

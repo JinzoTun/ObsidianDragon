@@ -10,11 +10,15 @@ commands:
     aliases: [odragon, dragon]
     usage: |
       /<command> spawn - Spawn the Ender Dragon
-      /<command> reload - Reload loot configuration
+      /<command> kill - Instantly kill the Ender Dragon
+      /<command> reload - Reload plugin configuration
     permission: obsidiandragon.spawn
 permissions:
   obsidiandragon.spawn:
     description: Allows a player to spawn the Ender Dragon
+    default: op
+  obsidiandragon.admin.kill:
+    description: Allows a player to instantly kill the Ender Dragon
     default: op
   obsidiandragon.admin.loot:
     description: Allows a player to reload loot configuration
