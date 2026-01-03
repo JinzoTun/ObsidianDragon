@@ -1,5 +1,5 @@
-name: ODragon
-version: '0.1.0-SNAPSHOT'
+name: ObsidianDragon
+version: '0.1.0-alpha'
 main: com.obsidian.dragon.ObsidianDragon
 description: A simple plugin to manage the Ender Dragon.
 api-version: '1.21'
@@ -8,7 +8,7 @@ softdepend: [ Vault, CoinsEngine ]
 commands:
   obsidiandragon:
     description: Manage the Ender Dragon.
-    aliases: [odragon, dragon]
+    aliases: [obsidiandragon, dragon]
     usage: |
       /<command> menu - Open the dragon menu GUI
       /<command> spawn - Spawn the Ender Dragon
