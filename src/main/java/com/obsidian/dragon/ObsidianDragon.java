@@ -49,6 +49,8 @@ public final class ObsidianDragon extends JavaPlugin {
         getLogger().info("DragonDeathListener registered.");
         getServer().getPluginManager().registerEvents(new MenuClickListener(guiManager), this);
         getLogger().info("MenuClickListener registered.");
+        getServer().getPluginManager().registerEvents(new com.obsidian.dragon.listener.ChatInputListener(this, guiManager.getEditorMenuManager()), this);
+        getLogger().info("ChatInputListener registered.");
 
         // Register commands
         DragonCommand dragonCommand = new DragonCommand(this);
@@ -136,23 +138,25 @@ public final class ObsidianDragon extends JavaPlugin {
      * Spawns the Ender Dragon in The End with economy integration.
      *
      * @param sender The command sender requesting the spawn
-     * @return true if the dragon was spawned successfully, false otherwise
      */
-    public boolean spawnDragon(org.bukkit.command.CommandSender sender) {
+    public void spawnDragon(org.bukkit.command.CommandSender sender) {
         if (!sender.hasPermission("obsidiandragon.spawn") && !sender.hasPermission("obsidiandragon.admin.menu")) {
             messageUtil.sendConfig(sender, "messages.no-permission",
                     "&cYou don't have permission to do that!");
-            return false;
+            return;
         }
+
+        // Normalize player reference (may be null for console/command blocks)
+        org.bukkit.entity.Player player = sender instanceof org.bukkit.entity.Player p ? p : null;
 
         // Process payment if sender is a player
         double paidAmount = 0;
-        if (sender instanceof org.bukkit.entity.Player player) {
+        if (player != null) {
             EconomyManager.TransactionResult result = economyManager.processSpawnPayment(player);
 
             if (!result.isSuccess()) {
                 messageUtil.send(sender, "&c" + result.getMessage());
-                return false;
+                return;
             }
 
             paidAmount = result.getAmount();
@@ -176,10 +180,9 @@ public final class ObsidianDragon extends JavaPlugin {
             if (success) {
                 messageUtil.sendConfig(sender, "messages.spawn-success",
                         "&aEnder Dragon respawn sequence started!");
-                return true;
             } else {
                 // Spawn failed - refund if payment was made
-                if (paidAmount > 0 && sender instanceof org.bukkit.entity.Player player) {
+                if (paidAmount > 0) {
                     economyManager.refundSpawnPayment(player, paidAmount);
                     messageUtil.sendConfig(sender, "economy.messages.refund-success",
                             "&aYou have been refunded %amount% (spawn failed).",
@@ -188,11 +191,10 @@ public final class ObsidianDragon extends JavaPlugin {
 
                 messageUtil.sendConfig(sender, "messages.spawn-failed",
                         "&cFailed to start dragon respawn. Is the dragon already alive or is the portal missing?");
-                return false;
             }
         } catch (Exception e) {
-            // Exception occurred - refund if payment was made
-            if (paidAmount > 0 && sender instanceof org.bukkit.entity.Player player) {
+            // Exception occurred - refund if payment was made and we have a player
+            if (paidAmount > 0) {
                 economyManager.refundSpawnPayment(player, paidAmount);
                 messageUtil.sendConfig(sender, "economy.messages.refund-success",
                         "&aYou have been refunded %amount% (error occurred).",
@@ -202,7 +204,6 @@ public final class ObsidianDragon extends JavaPlugin {
             messageUtil.sendConfig(sender, "messages.spawn-error",
                     "&cError: %error%", "%error%", e.getMessage());
             getLogger().warning("Failed to spawn dragon: " + e.getMessage());
-            return false;
         }
     }
 

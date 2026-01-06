@@ -28,6 +28,7 @@ public class DragonCommand implements CommandExecutor, TabCompleter {
         if (args.length == 0) {
             msg.send(sender, "&e&lObsidianDragon Commands:");
             msg.send(sender, "&7/dragon menu &f- Open the dragon menu GUI");
+            msg.send(sender, "&7/dragon editor &f- Open the loot editor (Admin)");
             msg.send(sender, "&7/dragon spawn &f- Spawn the Ender Dragon");
             msg.send(sender, "&7/dragon kill &f- Instantly kill the Ender Dragon");
             msg.send(sender, "&7/dragon reload &f- Reload plugin configuration");
@@ -38,6 +39,7 @@ public class DragonCommand implements CommandExecutor, TabCompleter {
 
         switch (subCommand) {
             case "menu" -> handleMenu(sender);
+            case "editor" -> handleEditor(sender);
             case "spawn" -> handleSpawn(sender);
             case "kill" -> handleKill(sender);
             case "reload" -> handleReload(sender);
@@ -62,6 +64,24 @@ public class DragonCommand implements CommandExecutor, TabCompleter {
         }
 
         plugin.getGUIManager().openMainMenu(player);
+    }
+
+    /**
+     * Handles the editor subcommand.
+     */
+    private void handleEditor(CommandSender sender) {
+        if (!(sender instanceof org.bukkit.entity.Player player)) {
+            msg.send(sender, "&cOnly players can use this command!");
+            return;
+        }
+
+        if (!player.hasPermission("obsidiandragon.admin.menu") && !player.hasPermission("obsidiandragon.admin.loot")) {
+            msg.sendConfig(sender, "messages.no-permission",
+                    "&cYou don't have permission to use this command.");
+            return;
+        }
+
+        plugin.getGUIManager().getEditorMenuManager().openEditorMenu(player);
     }
 
     /**
@@ -117,6 +137,12 @@ public class DragonCommand implements CommandExecutor, TabCompleter {
             if ((sender.hasPermission("obsidiandragon.menu.use") || sender.hasPermission("obsidiandragon.admin.menu"))
                     && "menu".startsWith(partial)) {
                 completions.add("menu");
+            }
+
+            // Add "editor" if player has admin permission
+            if ((sender.hasPermission("obsidiandragon.admin.menu") || sender.hasPermission("obsidiandragon.admin.loot"))
+                    && "editor".startsWith(partial)) {
+                completions.add("editor");
             }
 
             // Add "spawn" if player has permission

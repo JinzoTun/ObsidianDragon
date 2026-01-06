@@ -7,10 +7,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.boss.DragonBattle;
-import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -27,11 +24,13 @@ public class GUIManager {
     private final ObsidianDragon plugin;
     private final MessageUtil msg;
     private final Map<UUID, String> pendingConfirmations;
+    private final EditorMenuManager editorMenuManager;
 
     public GUIManager(ObsidianDragon plugin) {
         this.plugin = plugin;
         this.msg = plugin.getMessageUtil();
         this.pendingConfirmations = new HashMap<>();
+        this.editorMenuManager = new EditorMenuManager(plugin);
     }
 
     /**
@@ -48,9 +47,7 @@ public class GUIManager {
             menu.setItem(11, createKillDragonButton());
         }
         menu.setItem(13, createSpawnDragonButton(player));
-        if (player.hasPermission("obsidiandragon.admin.menu")) {
-            menu.setItem(15, createConfigureLootButton());
-        }
+        // Removed Configure Loot from main menu as requested; keep other buttons only.
 
         player.openInventory(menu);
     }
@@ -109,14 +106,37 @@ public class GUIManager {
 
     /**
      * Opens the loot configuration menu for admins.
+     * Updated to use a 54-slot layout with a black border; buttons are placed
+     * on non-border slots and the back button is bottom-center (slot 49).
      *
      * @param player The player to open the menu for
      */
     public void openLootMenu(Player player) {
         Component title = LegacyComponentSerializer.legacySection().deserialize("§6Loot Configuration");
-        Inventory menu = Bukkit.createInventory(null, 27, title);
+        Inventory menu = Bukkit.createInventory(null, 54, title);
 
-        // Reload Loot button (slot 11)
+        // Border (black) and interior filler
+        ItemStack border = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta borderMeta = border.getItemMeta();
+        if (borderMeta != null) borderMeta.displayName(LegacyComponentSerializer.legacySection().deserialize("§8 "));
+        if (borderMeta != null) border.setItemMeta(borderMeta);
+
+        ItemStack interior = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta intMeta = interior.getItemMeta();
+        if (intMeta != null) intMeta.displayName(LegacyComponentSerializer.legacySection().deserialize("§8 "));
+        if (intMeta != null) interior.setItemMeta(intMeta);
+
+        // Fill interior then overwrite border
+        for (int i = 0; i < 54; i++) menu.setItem(i, interior.clone());
+        for (int i = 0; i < 54; i++) {
+            int row = i / 9;
+            int col = i % 9;
+            if (row == 0 || row == 5 || col == 0 || col == 8) {
+                menu.setItem(i, border.clone());
+            }
+        }
+
+        // Place Reload Loot (center of second row -> slot 13) on a non-border slot
         ItemStack reload = new ItemStack(Material.BOOK);
         ItemMeta reloadMeta = reload.getItemMeta();
         if (reloadMeta != null) {
@@ -128,9 +148,9 @@ public class GUIManager {
             reloadMeta.lore(reloadLore);
             reload.setItemMeta(reloadMeta);
         }
-        menu.setItem(11, reload);
+        menu.setItem(13, reload);
 
-        // Edit Config button (slot 13)
+        // Place Edit Config (slot 15) on non-border slot
         ItemStack edit = new ItemStack(Material.WRITABLE_BOOK);
         ItemMeta editMeta = edit.getItemMeta();
         if (editMeta != null) {
@@ -138,22 +158,20 @@ public class GUIManager {
             List<Component> editLore = new ArrayList<>();
             editLore.add(LegacyComponentSerializer.legacySection().deserialize("§7Loot items: §f" + plugin.getLootManager().getLootItemCount()));
             editLore.add(Component.empty());
-            editLore.add(LegacyComponentSerializer.legacySection().deserialize("§8Edit loot.yml manually"));
-            editLore.add(LegacyComponentSerializer.legacySection().deserialize("§8in the plugins folder"));
+            editLore.add(LegacyComponentSerializer.legacySection().deserialize("§8Edit loot.yml manually in the plugins folder"));
             editMeta.lore(editLore);
             edit.setItemMeta(editMeta);
         }
-        menu.setItem(13, edit);
+        menu.setItem(15, edit);
 
-        // Back button (slot 18)
-        ItemStack back = new ItemStack(Material.ARROW);
+        // Back button (slot 49) - Iron Door at bottom-center
+        ItemStack back = new ItemStack(Material.IRON_DOOR);
         ItemMeta backMeta = back.getItemMeta();
         if (backMeta != null) {
             backMeta.displayName(LegacyComponentSerializer.legacySection().deserialize("§7Back to Main Menu"));
             back.setItemMeta(backMeta);
         }
-        menu.setItem(18, back);
-
+        menu.setItem(49, back);
 
         player.openInventory(menu);
     }
@@ -168,6 +186,12 @@ public class GUIManager {
      */
     public void handleMenuClick(Player player, String title, int slot, ItemStack item) {
         if (item == null || item.getType() == Material.AIR) {
+            return;
+        }
+
+        // Check if it's an editor menu
+        if (title.contains("Editor") || title.contains("Loot Editor") || title.contains("Item Editor") || title.contains("Select Item")) {
+            editorMenuManager.handleMenuClick(player, title, slot);
             return;
         }
 
@@ -186,6 +210,14 @@ public class GUIManager {
     }
 
     /**
+     * Gets the EditorMenuManager instance.
+     * @return the EditorMenuManager
+     */
+    public EditorMenuManager getEditorMenuManager() {
+        return editorMenuManager;
+    }
+
+    /**
      * Handles clicks in the main menu.
      */
     private void handleMainMenuClick(Player player, int slot) {
@@ -195,7 +227,6 @@ public class GUIManager {
                     msg.send(player, "&cYou don't have permission to do that!");
                     return;
                 }
-                player.closeInventory();
                 openKillConfirmation(player);
                 break;
 
@@ -204,20 +235,12 @@ public class GUIManager {
                     msg.send(player, "&cYou don't have permission to do that!");
                     return;
                 }
-                player.closeInventory();
                 spawnDragon(player);
                 break;
 
-            case 15: // Configure Loot
-                if (!player.hasPermission("obsidiandragon.admin.menu")) {
-                    msg.send(player, "&cYou don't have permission to do that!");
-                    return;
-                }
-                player.closeInventory();
-                openLootMenu(player);
-                break;
-        }
-    }
+            // slot 15 removed from main menu
+         }
+     }
 
     /**
      * Handles clicks in the kill confirmation menu.
@@ -226,18 +249,15 @@ public class GUIManager {
         String action = pendingConfirmations.remove(player.getUniqueId());
 
         if (action == null || !action.equals("kill_dragon")) {
-            player.closeInventory();
             return;
         }
 
         switch (slot) {
             case 11: // Confirm
-                player.closeInventory();
                 plugin.getDragonKillManager().killDragon(player);
                 break;
 
             case 15: // Cancel
-                player.closeInventory();
                 msg.send(player, "&7Action cancelled.");
                 openMainMenu(player);
                 break;
@@ -249,8 +269,7 @@ public class GUIManager {
      */
     private void handleLootMenuClick(Player player, int slot) {
         switch (slot) {
-            case 11: // Reload Loot
-                player.closeInventory();
+            case 13: // Reload Loot (moved to slot 13)
                 msg.send(player, "&eReloading loot configuration...");
                 boolean success = plugin.getLootManager().reload();
                 if (success) {
@@ -261,104 +280,15 @@ public class GUIManager {
                 }
                 break;
 
-            case 13: // Edit Config (info only)
+            case 15: // Edit Config (moved to slot 15)
                 msg.send(player, "&7Edit the loot.yml file in the plugins/ODragon folder.");
                 msg.send(player, "&7Then use the reload button to apply changes.");
                 break;
 
-            case 18: // Back
-                player.closeInventory();
+            case 49: // Back (moved to slot 49)
                 openMainMenu(player);
                 break;
         }
-    }
-
-    /**
-     * Creates the dragon status item.
-     */
-    private ItemStack createDragonStatusItem() {
-        DragonBattle battle = getDragonBattle();
-        boolean isDragonAlive = battle != null && battle.getEnderDragon() != null && !battle.getEnderDragon().isDead();
-
-        Material material = isDragonAlive ? Material.LIME_CONCRETE : Material.RED_CONCRETE;
-        ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-
-        if (meta != null) {
-            if (isDragonAlive) {
-                meta.displayName(LegacyComponentSerializer.legacySection().deserialize("§a§lDRAGON ALIVE"));
-                List<Component> lore = new ArrayList<>();
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§7The Ender Dragon is"));
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§7currently alive in The End"));
-                lore.add(Component.empty());
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§a● Active"));
-                meta.lore(lore);
-            } else {
-                meta.displayName(LegacyComponentSerializer.legacySection().deserialize("§c§lDRAGON DEAD"));
-                List<Component> lore = new ArrayList<>();
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§7The Ender Dragon is"));
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§7currently not alive"));
-                lore.add(Component.empty());
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§c● Inactive"));
-                meta.lore(lore);
-            }
-            item.setItemMeta(meta);
-        }
-
-        return item;
-    }
-
-    /**
-     * Creates the dragon health item.
-     */
-    private ItemStack createDragonHealthItem() {
-        DragonBattle battle = getDragonBattle();
-        EnderDragon dragon = battle != null ? battle.getEnderDragon() : null;
-
-        ItemStack item = new ItemStack(Material.DRAGON_HEAD);
-        ItemMeta meta = item.getItemMeta();
-
-        if (meta != null) {
-            if (dragon != null && !dragon.isDead()) {
-                double health = dragon.getHealth();
-                double maxHealth = 200.0; // Default Ender Dragon max health
-                AttributeInstance maxHealthAttr = dragon.getAttribute(Attribute.MAX_HEALTH);
-                if (maxHealthAttr != null) {
-                    maxHealth = maxHealthAttr.getValue();
-                }
-                int healthPercent = (int) ((health / maxHealth) * 100);
-
-                meta.displayName(LegacyComponentSerializer.legacySection().deserialize("§d§lENDER DRAGON"));
-                List<Component> lore = new ArrayList<>();
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§7Health: §c" + String.format("%.1f", health) + " §7/ §c" + String.format("%.1f", maxHealth)));
-                lore.add(Component.empty());
-
-                // Health bar visualization
-                String healthBar;
-                if (healthPercent > 75) {
-                    healthBar = "§a▓▓▓▓▓▓▓▓§8▓▓";
-                } else if (healthPercent > 50) {
-                    healthBar = "§e▓▓▓▓▓▓§8▓▓▓▓";
-                } else if (healthPercent > 25) {
-                    healthBar = "§6▓▓▓▓§8▓▓▓▓▓▓";
-                } else {
-                    healthBar = "§c▓▓§8▓▓▓▓▓▓▓▓";
-                }
-                lore.add(LegacyComponentSerializer.legacySection().deserialize(healthBar + " §f" + healthPercent + "%"));
-
-                meta.lore(lore);
-            } else {
-                meta.displayName(LegacyComponentSerializer.legacySection().deserialize("§8§lENDER DRAGON"));
-                List<Component> lore = new ArrayList<>();
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§7The dragon is not alive"));
-                lore.add(Component.empty());
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§8No health data available"));
-                meta.lore(lore);
-            }
-            item.setItemMeta(meta);
-        }
-
-        return item;
     }
 
     /**
@@ -433,77 +363,6 @@ public class GUIManager {
         return item;
     }
 
-    /**
-     * Creates the economy information display item.
-     */
-    private ItemStack createEconomyInfoItem(Player player) {
-        ItemStack item = new ItemStack(Material.GOLD_INGOT);
-        ItemMeta meta = item.getItemMeta();
-
-        if (meta != null) {
-            meta.displayName(LegacyComponentSerializer.legacySection().deserialize("§6§lECONOMY INFO"));
-            List<Component> lore = new ArrayList<>();
-
-            boolean economyEnabled = plugin.getEconomyManager().isEconomyEnabled();
-            String provider = plugin.getEconomyManager().getProviderName();
-
-            if (economyEnabled) {
-                double balance = plugin.getEconomyManager().getBalance(player);
-                String formattedBalance = plugin.getEconomyManager().formatCurrency(balance);
-                double spawnCost = plugin.getEconomyManager().getSpawnCost();
-                String formattedCost = plugin.getEconomyManager().formatCurrency(spawnCost);
-
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§7Provider: §f" + provider));
-                lore.add(Component.empty());
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§7Your Balance:"));
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§f" + formattedBalance));
-                lore.add(Component.empty());
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§7Dragon Spawn Cost:"));
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§f" + formattedCost));
-
-                if (player.hasPermission("obsidiandragon.spawn.free") || player.hasPermission("obsidiandragon.admin.menu")) {
-                    lore.add(Component.empty());
-                    lore.add(LegacyComponentSerializer.legacySection().deserialize("§aYou have free spawn!"));
-                }
-            } else {
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§7Economy: §cDisabled"));
-                lore.add(Component.empty());
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§7Dragon spawning is free"));
-                lore.add(LegacyComponentSerializer.legacySection().deserialize("§7for everyone!"));
-            }
-
-            meta.lore(lore);
-            item.setItemMeta(meta);
-        }
-
-        return item;
-    }
-
-    /**
-     * Creates the configure loot button.
-     */
-    private ItemStack createConfigureLootButton() {
-        ItemStack item = new ItemStack(Material.ENDER_CHEST);
-        ItemMeta meta = item.getItemMeta();
-
-        if (meta != null) {
-            meta.displayName(LegacyComponentSerializer.legacySection().deserialize("§d§lLOOT CONFIG"));
-            List<Component> lore = new ArrayList<>();
-            lore.add(LegacyComponentSerializer.legacySection().deserialize("§7Configure dragon loot drops"));
-            lore.add(LegacyComponentSerializer.legacySection().deserialize("§7and reward settings."));
-            lore.add(Component.empty());
-            lore.add(LegacyComponentSerializer.legacySection().deserialize("§7Configured Items: §f" + plugin.getLootManager().getLootItemCount()));
-            lore.add(Component.empty());
-            lore.add(LegacyComponentSerializer.legacySection().deserialize("§8Permission: §7obsidiandragon.admin.menu"));
-            lore.add(Component.empty());
-            lore.add(LegacyComponentSerializer.legacySection().deserialize("§e▶ Click to open loot menu"));
-            meta.lore(lore);
-            item.setItemMeta(meta);
-        }
-
-        return item;
-    }
-
 
     /**
      * Spawns the dragon for a player.
@@ -537,4 +396,3 @@ public class GUIManager {
         pendingConfirmations.remove(playerId);
     }
 }
-

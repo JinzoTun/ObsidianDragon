@@ -4,6 +4,16 @@ All notable changes to ObsidianDragon will be documented in this file.
 
 ---
 
+## [0.1.1] - 2026-01-06
+
+### Added
+- `/dragon editor` command that opens the in-game loot editor.
+- In-game loot editor: change loot (name, amount, lore) and sync changes with `loot.yml`.
+- Edit item amount and sort items (by chance) from the editor.
+- Dynamic pagination for large loot lists and improved, clearer menu layout.
+
+---
+
 ## [0.1.0-alpha] - 2026-01-03
 
 **Initial alpha release** - Basic dragon management features for your server.
@@ -26,6 +36,3 @@ All notable changes to ObsidianDragon will be documented in this file.
 - Feedback and bug reports are appreciated!
 
 ---
-
-
-
